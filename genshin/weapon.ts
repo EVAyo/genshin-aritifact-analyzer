@@ -298,6 +298,22 @@ export enum Weapon {
   NOCTURNES_CURTAIN_CALL = 229,
   RAINBOW_SERPENTS_RAIN_BOW = 230,
   THE_DAYBREAK_CHRONICLES = 231,
+  DISASTER_AND_REMORSE = 232,
+  ANGELOS_HEPTADES = 233,
+  GOLDEN_FROSTBOUND_OATH = 234,
+  A_TEASPOON_OF_TRANSCENDENCE = 235,
+  BLADE_OF_ATONEMENT = 236,
+  CLASH_OF_KINGS = 237,
+  COVENANT_OF_FROST_AND_SNOW = 238,
+  ECHOES_OF_THE_HEART = 239,
+  EMBERWELL = 240,
+  EXAIPHANES_BLADE = 241,
+  FORGED_BY_THE_GOLDEN_MELODY = 242,
+  FROSTBREATH = 243,
+  HERETICS_MOLTEN_BLADE = 244,
+  JADE_VISTA = 245,
+  SONG_OF_THE_VIGIL = 246,
+  WHITELAKE_FROSTFEATHER = 247,
   UNRECOGNIZED = -1,
 }
 
@@ -999,6 +1015,54 @@ export function weaponFromJSON(object: any): Weapon {
     case 231:
     case "THE_DAYBREAK_CHRONICLES":
       return Weapon.THE_DAYBREAK_CHRONICLES;
+    case 232:
+    case "DISASTER_AND_REMORSE":
+      return Weapon.DISASTER_AND_REMORSE;
+    case 233:
+    case "ANGELOS_HEPTADES":
+      return Weapon.ANGELOS_HEPTADES;
+    case 234:
+    case "GOLDEN_FROSTBOUND_OATH":
+      return Weapon.GOLDEN_FROSTBOUND_OATH;
+    case 235:
+    case "A_TEASPOON_OF_TRANSCENDENCE":
+      return Weapon.A_TEASPOON_OF_TRANSCENDENCE;
+    case 236:
+    case "BLADE_OF_ATONEMENT":
+      return Weapon.BLADE_OF_ATONEMENT;
+    case 237:
+    case "CLASH_OF_KINGS":
+      return Weapon.CLASH_OF_KINGS;
+    case 238:
+    case "COVENANT_OF_FROST_AND_SNOW":
+      return Weapon.COVENANT_OF_FROST_AND_SNOW;
+    case 239:
+    case "ECHOES_OF_THE_HEART":
+      return Weapon.ECHOES_OF_THE_HEART;
+    case 240:
+    case "EMBERWELL":
+      return Weapon.EMBERWELL;
+    case 241:
+    case "EXAIPHANES_BLADE":
+      return Weapon.EXAIPHANES_BLADE;
+    case 242:
+    case "FORGED_BY_THE_GOLDEN_MELODY":
+      return Weapon.FORGED_BY_THE_GOLDEN_MELODY;
+    case 243:
+    case "FROSTBREATH":
+      return Weapon.FROSTBREATH;
+    case 244:
+    case "HERETICS_MOLTEN_BLADE":
+      return Weapon.HERETICS_MOLTEN_BLADE;
+    case 245:
+    case "JADE_VISTA":
+      return Weapon.JADE_VISTA;
+    case 246:
+    case "SONG_OF_THE_VIGIL":
+      return Weapon.SONG_OF_THE_VIGIL;
+    case 247:
+    case "WHITELAKE_FROSTFEATHER":
+      return Weapon.WHITELAKE_FROSTFEATHER;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -1472,6 +1536,38 @@ export function weaponToJSON(object: Weapon): string {
       return "RAINBOW_SERPENTS_RAIN_BOW";
     case Weapon.THE_DAYBREAK_CHRONICLES:
       return "THE_DAYBREAK_CHRONICLES";
+    case Weapon.DISASTER_AND_REMORSE:
+      return "DISASTER_AND_REMORSE";
+    case Weapon.ANGELOS_HEPTADES:
+      return "ANGELOS_HEPTADES";
+    case Weapon.GOLDEN_FROSTBOUND_OATH:
+      return "GOLDEN_FROSTBOUND_OATH";
+    case Weapon.A_TEASPOON_OF_TRANSCENDENCE:
+      return "A_TEASPOON_OF_TRANSCENDENCE";
+    case Weapon.BLADE_OF_ATONEMENT:
+      return "BLADE_OF_ATONEMENT";
+    case Weapon.CLASH_OF_KINGS:
+      return "CLASH_OF_KINGS";
+    case Weapon.COVENANT_OF_FROST_AND_SNOW:
+      return "COVENANT_OF_FROST_AND_SNOW";
+    case Weapon.ECHOES_OF_THE_HEART:
+      return "ECHOES_OF_THE_HEART";
+    case Weapon.EMBERWELL:
+      return "EMBERWELL";
+    case Weapon.EXAIPHANES_BLADE:
+      return "EXAIPHANES_BLADE";
+    case Weapon.FORGED_BY_THE_GOLDEN_MELODY:
+      return "FORGED_BY_THE_GOLDEN_MELODY";
+    case Weapon.FROSTBREATH:
+      return "FROSTBREATH";
+    case Weapon.HERETICS_MOLTEN_BLADE:
+      return "HERETICS_MOLTEN_BLADE";
+    case Weapon.JADE_VISTA:
+      return "JADE_VISTA";
+    case Weapon.SONG_OF_THE_VIGIL:
+      return "SONG_OF_THE_VIGIL";
+    case Weapon.WHITELAKE_FROSTFEATHER:
+      return "WHITELAKE_FROSTFEATHER";
     case Weapon.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";

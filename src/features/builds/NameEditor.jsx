@@ -1,16 +1,25 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Check } from "phosphor-react";
+import { getBuildName } from "../../utils/build";
 
-const NameEditor = ({ name, setName, isPreset=false }) => {
+const NameEditor = ({ name, setName, isPreset = false }) => {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
+  const displayName = getBuildName(name, t);
 
   return !isEditing ? (
     <h2 className="card-title">
       {isPreset && <span className="badge badge-primary">{t("Presets")}</span>}
-      {name ? t(name) : t("Unnamed Build")}
-      <Pencil className="cursor-pointer" onClick={() => setIsEditing(true)} />
+      {displayName}
+      <button
+        type="button"
+        className="btn btn-ghost btn-circle btn-xs"
+        aria-label={t("Edit")}
+        onClick={() => setIsEditing(true)}
+      >
+        <Pencil aria-hidden="true" />
+      </button>
     </h2>
   ) : (
     <div className="flex flex-row items-center">
@@ -18,11 +27,23 @@ const NameEditor = ({ name, setName, isPreset=false }) => {
         id="name"
         type="text"
         placeholder={t("Unnamed Build")}
-        className="input-primary input-ghost input-sm max-w-xs"
-        value={name}
+        aria-label={t("Name")}
+        className="input input-primary input-ghost input-sm max-w-xs"
+        value={name ?? ""}
+        autoFocus
         onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === "Escape") setIsEditing(false);
+        }}
       />
-      <Check className="cursor-pointer" onClick={() => setIsEditing(false)} weight='bold' />
+      <button
+        type="button"
+        className="btn btn-ghost btn-circle btn-xs"
+        aria-label={t("Confirm")}
+        onClick={() => setIsEditing(false)}
+      >
+        <Check aria-hidden="true" weight="bold" />
+      </button>
     </div>
   );
 };

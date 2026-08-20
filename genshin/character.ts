@@ -131,6 +131,14 @@ export enum Character {
   ZIBAI = 119,
   ILLUGA = 120,
   VARKA = 121,
+  LOHEN = 122,
+  LINNEA = 123,
+  NICOLE = 124,
+  PRUNE = 125,
+  SANDRONE = 126,
+  TRAVELER_CRYO = 127,
+  ALYOSHA = 128,
+  ODETTE = 129,
   UNRECOGNIZED = -1,
 }
 
@@ -502,6 +510,30 @@ export function characterFromJSON(object: any): Character {
     case 121:
     case "VARKA":
       return Character.VARKA;
+    case 122:
+    case "LOHEN":
+      return Character.LOHEN;
+    case 123:
+    case "LINNEA":
+      return Character.LINNEA;
+    case 124:
+    case "NICOLE":
+      return Character.NICOLE;
+    case 125:
+    case "PRUNE":
+      return Character.PRUNE;
+    case 126:
+    case "SANDRONE":
+      return Character.SANDRONE;
+    case 127:
+    case "TRAVELER_CRYO":
+      return Character.TRAVELER_CRYO;
+    case 128:
+    case "ALYOSHA":
+      return Character.ALYOSHA;
+    case 129:
+    case "ODETTE":
+      return Character.ODETTE;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -755,6 +787,22 @@ export function characterToJSON(object: Character): string {
       return "ILLUGA";
     case Character.VARKA:
       return "VARKA";
+    case Character.LOHEN:
+      return "LOHEN";
+    case Character.LINNEA:
+      return "LINNEA";
+    case Character.NICOLE:
+      return "NICOLE";
+    case Character.PRUNE:
+      return "PRUNE";
+    case Character.SANDRONE:
+      return "SANDRONE";
+    case Character.TRAVELER_CRYO:
+      return "TRAVELER_CRYO";
+    case Character.ALYOSHA:
+      return "ALYOSHA";
+    case Character.ODETTE:
+      return "ODETTE";
     case Character.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";

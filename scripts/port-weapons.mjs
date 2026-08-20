@@ -1,89 +1,102 @@
-import genshindb from "genshin-db";
-import fs from "fs";
+import fs from "node:fs";
+
 import * as utils from "./utils.mjs";
+import { weaponKey } from "./game-data/keys.mjs";
 
-await utils.update_weapon_data('scripts/weapon');
-const names = utils.readNamesFromFile('scripts/weapon');
+const portWeapons = async (catalog) => {
+  const recordsByKey = new Map(
+    catalog.weapons.map((record) => [record.key, record])
+  );
+  const remoteNames = catalog.weapons.map(({ name }) => name);
+  const names = utils.syncNamesFile("scripts/weapon", remoteNames, (name) =>
+    name.replace(/"/g, "")
+  );
+  const translations = { en: {} };
+  const weaponData = {};
+  const protoLines = [
+    'syntax = "proto3";',
+    "",
+    "package io.leishi.genshin.proto;",
+    "",
+    "enum WeaponType {",
+    "    WEAPON_TYPE_UNSPECIFIED = 0;",
+    "    BOW = 1;",
+    "    CLAYMORE = 2;",
+    "    CATALYST = 3;",
+    "    POLEARM = 4;",
+    "    SWORD = 5;",
+    "}",
+    "",
+    "enum Weapon {",
+    "    WEAPON_UNSPECIFIED = 0;",
+  ];
 
-const portWeapons = async () => {
-  let trans = {
-    en: {},
-  };
-  let data = {};
+  let index = 1;
+  for (const name of names) {
+    const english = recordsByKey.get(weaponKey(name));
+    if (!english)
+      throw new Error(`Weapon ${name} was not found in the catalog`);
 
-  let idx = 0;
-  let proto_file = fs.createWriteStream("./proto/weapon.proto", { flags: "w" });
-  proto_file.write('syntax = "proto3";\n\n');
-  proto_file.write("package io.leishi.genshin.proto;\n\n");
-  proto_file.write("enum WeaponType {\n");
-  proto_file.write(`    WEAPON_TYPE_UNSPECIFIED = 0;\n`);
-  proto_file.write(`    BOW = 1;\n`);
-  proto_file.write(`    CLAYMORE = 2;\n`);
-  proto_file.write(`    CATALYST = 3;\n`);
-  proto_file.write(`    POLEARM = 4;\n`);
-  proto_file.write(`    SWORD = 5;\n`);
-  proto_file.write("}\n\n");
-  proto_file.write("enum Weapon {\n");
-  proto_file.write(`    WEAPON_UNSPECIFIED = ${idx++};\n`);
-  names.forEach(async (e) => {
-    const eng = genshindb.weapons(e);
-    if (!eng) {
-      console.warn(`No weapon found for ${e}!`);
-      return;
-    }
-
-    let key = eng.name
-      .replace(/['"]/gi, "")
-      .replace(/[^0-9a-z]/gi, "_")
-      .toLowerCase();
-    proto_file.write(`    ${key.toUpperCase()} = ${idx++};\n`);
-
-    data[key] = {
-      weapontype: eng.weaponText,
-      rarity: eng.rarity,
+    const key = weaponKey(english.name);
+    protoLines.push(`    ${key.toUpperCase()} = ${index++};`);
+    weaponData[key] = {
+      weapontype: english.weaponType,
+      rarity: english.rarity,
     };
-    trans["en"][key] = eng.name;
-    for (let lng of Object.keys(utils.lngToRegion)) {
-      const data = genshindb.weapons(e, { resultLanguage: lng });
-      if (!!!trans[utils.lngToRegion[lng]]) {
-        trans[utils.lngToRegion[lng]] = {};
-      }
-      trans[utils.lngToRegion[lng]][key] = data.name;
-      if (data.images.filename_icon) {
-        const imagePath = `./src/assets/weapons/${key}.png`;
-        if (!utils.isValidImage(imagePath)) {
-          let result = await utils.download_from_yuheng(
-            data.images.filename_icon,
-            "weapon",
-            imagePath
-          );
-          if (!result) console.error(`Failed to download image for weapon ${e}`);
-        }
-      }
-      if (data.images.filename_awakenIcon) {
-        const imagePath = `./src/assets/weapons/${key}_awaken.png`;
-        if (!utils.isValidImage(imagePath)) {
-          let result = await utils.download_from_yuheng(
-            data.images.filename_awakenIcon,
-            "weapon",
-            imagePath
-          );
-          if (!result) console.error(`Failed to download awaken image for weapon ${e}`);
-        }
-      }
-    }
-  });
-  proto_file.write("}\n");
+    translations.en[key] = english.name;
 
-  for (let lng of Object.keys(trans)) {
-    fs.writeFileSync(
-      `./public/locales/${lng}/weapons.json`,
-      JSON.stringify(trans[lng]),
-      "utf-8"
-    );
+    for (const locale of Object.values(utils.lngToRegion)) {
+      const localized = english.translations[locale];
+      if (!localized)
+        throw new Error(`${name} is missing the ${locale} translation`);
+      translations[locale] ??= {};
+      translations[locale][key] = localized;
+    }
+
+    const images = english.images ?? {};
+    const imageSpecs = [
+      {
+        suffix: "",
+        filename: images.filenameIcon,
+        directUrls: images.iconUrls ?? [],
+      },
+      {
+        suffix: "_awaken",
+        filename: images.filenameAwakenIcon,
+        directUrls: images.awakenUrls ?? [],
+      },
+    ];
+
+    for (const { suffix, filename, directUrls } of imageSpecs) {
+      const imagePath = `src/assets/weapons/${key}${suffix}.png`;
+      if (utils.isValidImage(imagePath)) continue;
+      if (!filename)
+        throw new Error(
+          `${name} is missing an image filename for ${suffix || "base"}`
+        );
+      await utils.downloadFirstAvailable(
+        [
+          utils.yattaImageUrl(filename, "weapon"),
+          utils.enkaImageUrl(filename),
+          ...directUrls,
+          utils.nanokaImageUrl(filename),
+        ],
+        imagePath,
+        `${name}${suffix}`
+      );
+    }
   }
 
-  fs.writeFileSync("./src/data/weapons.json", JSON.stringify(data), "utf-8");
+  protoLines.push("}", "");
+  fs.writeFileSync("proto/weapon.proto", protoLines.join("\n"), "utf8");
+  for (const [locale, values] of Object.entries(translations)) {
+    fs.writeFileSync(
+      `public/locales/${locale}/weapons.json`,
+      JSON.stringify(values),
+      "utf8"
+    );
+  }
+  fs.writeFileSync("src/data/weapons.json", JSON.stringify(weaponData), "utf8");
 };
 
-export{portWeapons};
+export { portWeapons };

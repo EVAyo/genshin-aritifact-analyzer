@@ -1,12 +1,12 @@
 import { Artifact } from "../genshin/artifact";
-import { Character } from "../genshin/character";
+import { Character, characterToJSON } from "../genshin/character";
 import { Weapon } from "../genshin/weapon";
-import {
+import type {
   ImportedCharacterInfo,
   ImportedWeaponInfo,
   GOODData,
   ParsedImportResult,
-} from "../genshin/import";
+} from "../types/import";
 import { deserializeFromGood, deserializeFromMona } from "./artifact";
 import { monaPositionToAttributePosition } from "./attribute";
 import { characterFromGoodName } from "./character";
@@ -15,9 +15,17 @@ import { enumToStringKey } from "./enum";
 /**
  * Convert ascension level to max level
  */
-const ascensionToMaxLevel = (ascension: number): number => {
+const ascensionToMaxLevel = (
+  ascension: number,
+  level: number,
+  equipment: "character" | "weapon"
+): number => {
   const maxLevels = [20, 40, 50, 60, 70, 80, 90];
-  return maxLevels[Math.min(ascension, 6)] ?? 90;
+  const cappedAscension = Math.min(ascension, 6);
+  if (equipment === "weapon" || cappedAscension < 6 || level <= 90) {
+    return maxLevels[cappedAscension] ?? 90;
+  }
+  return level <= 95 ? 95 : 100;
 };
 
 /**
@@ -25,32 +33,37 @@ const ascensionToMaxLevel = (ascension: number): number => {
  * GOOD format uses PascalCase (e.g., "TheStringless"), enum uses SCREAMING_SNAKE_CASE (e.g., "THE_STRINGLESS")
  */
 export const weaponFromGoodName = (name: string): Weapon => {
-  if (!name || name === '') return Weapon.WEAPON_UNSPECIFIED;
+  if (!name || name === "") return Weapon.WEAPON_UNSPECIFIED;
 
   // Build lookup map: normalized key -> Weapon enum value
   const weapons: Record<string, Weapon> = {};
   enumToStringKey(Weapon).forEach((key) => {
     // Remove underscores and convert to uppercase for comparison
-    weapons[key.replace(/_/g, '').toUpperCase()] = Weapon[key as keyof typeof Weapon];
+    weapons[key.replace(/_/g, "").toUpperCase()] =
+      Weapon[key as keyof typeof Weapon];
   });
 
   // Normalize GOOD name: remove spaces/special chars and uppercase
-  const normalizedName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const normalizedName = name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
   return weapons[normalizedName] ?? Weapon.WEAPON_UNSPECIFIED;
 };
 
 /**
  * Parse a GOOD format character object
  */
-export const deserializeCharacterFromGood = (input: any): ImportedCharacterInfo => {
+export const deserializeCharacterFromGood = (
+  input: any
+): ImportedCharacterInfo => {
   const character = characterFromGoodName(input.key);
   const ascension = input.ascension ?? 0;
+  const level = input.level ?? 1;
   const talent = input.talent ?? { auto: 1, skill: 1, burst: 1 };
 
   return {
     character,
-    level: input.level ?? 1,
-    maxLevel: ascensionToMaxLevel(ascension),
+    level,
+    ascension,
+    maxLevel: ascensionToMaxLevel(ascension, level, "character"),
     constellation: input.constellation ?? 0,
     talents: [talent.auto ?? 1, talent.skill ?? 1, talent.burst ?? 1],
   };
@@ -59,16 +72,39 @@ export const deserializeCharacterFromGood = (input: any): ImportedCharacterInfo 
 /**
  * Parse a GOOD format weapon object
  */
-export const deserializeWeaponFromGood = (input: any): ImportedWeaponInfo => {
+export const deserializeWeaponFromGood = (
+  input: any,
+  resolveCharacter: (name: string) => Character = characterFromGoodName
+): ImportedWeaponInfo => {
   const weapon = weaponFromGoodName(input.key);
   const ascension = input.ascension ?? 0;
+  const level = input.level ?? 1;
 
   return {
     weapon,
-    level: input.level ?? 1,
-    maxLevel: ascensionToMaxLevel(ascension),
+    level,
+    ascension,
+    maxLevel: ascensionToMaxLevel(ascension, level, "weapon"),
     refinement: input.refinement ?? 1,
-    location: characterFromGoodName(input.location ?? ''),
+    location: resolveCharacter(input.location ?? ""),
+  };
+};
+
+const createGoodLocationResolver = (
+  characters: ImportedCharacterInfo[]
+): ((name: string) => Character) => {
+  const travelerCharacters = characters
+    .map(({ character }) => character)
+    .filter((character) => characterToJSON(character).startsWith("TRAVELER_"));
+  const uniqueTravelers = [...new Set(travelerCharacters)];
+
+  return (name: string) => {
+    if (name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase() === "TRAVELER") {
+      return uniqueTravelers.length === 1
+        ? uniqueTravelers[0]
+        : Character.CHARACTER_UNSPECIFIED;
+    }
+    return characterFromGoodName(name);
   };
 };
 
@@ -87,24 +123,26 @@ export const parseGOODFormat = (content: any): GOODData => {
     }
   }
 
+  const resolveLocation = createGoodLocationResolver(characters);
+
   // Parse weapons
   if (Array.isArray(content.weapons)) {
     for (const weap of content.weapons) {
-      weapons.push(deserializeWeaponFromGood(weap));
+      weapons.push(deserializeWeaponFromGood(weap, resolveLocation));
     }
   }
 
   // Parse artifacts
   if (Array.isArray(content.artifacts)) {
     for (const art of content.artifacts) {
-      artifacts.push(deserializeFromGood(art));
+      artifacts.push(deserializeFromGood(art, resolveLocation));
     }
   }
 
   return {
-    format: content.format ?? 'GOOD',
+    format: content.format ?? "GOOD",
     version: content.version ?? 1,
-    source: content.source ?? 'Unknown',
+    source: content.source ?? "Unknown",
     characters,
     weapons,
     artifacts,
@@ -115,7 +153,7 @@ export const parseGOODFormat = (content: any): GOODData => {
  * Check if content is in GOOD format
  */
 export const isGOODFormat = (content: any): boolean => {
-  return content?.format === 'GOOD';
+  return content?.format === "GOOD";
 };
 
 /**
@@ -123,7 +161,7 @@ export const isGOODFormat = (content: any): boolean => {
  */
 export const isMonaFormat = (content: any): boolean => {
   return (
-    content?.version === '1' &&
+    content?.version === "1" &&
     Object.keys(monaPositionToAttributePosition).every((k) => k in content)
   );
 };
@@ -135,7 +173,7 @@ export const parseImportFile = (content: any): ParsedImportResult => {
   if (isGOODFormat(content)) {
     const goodData = parseGOODFormat(content);
     return {
-      format: 'GOOD',
+      format: "GOOD",
       artifacts: goodData.artifacts,
       characters: goodData.characters,
       weapons: goodData.weapons,
@@ -145,13 +183,13 @@ export const parseImportFile = (content: any): ParsedImportResult => {
   if (isMonaFormat(content)) {
     const artifacts: Artifact[] = [];
     for (const k of Object.keys(content)) {
-      if (k === 'version') continue;
+      if (k === "version") continue;
       for (const art of content[k]) {
         artifacts.push(deserializeFromMona(art));
       }
     }
     return {
-      format: 'Mona',
+      format: "Mona",
       artifacts,
       characters: [],
       weapons: [],
@@ -163,7 +201,7 @@ export const parseImportFile = (content: any): ParsedImportResult => {
     artifacts: [],
     characters: [],
     weapons: [],
-    error: 'Unsupported file format',
+    error: "Unsupported file format",
   };
 };
 
@@ -173,4 +211,4 @@ export type {
   ImportedWeaponInfo,
   GOODData,
   ParsedImportResult,
-} from "../genshin/import";
+} from "../types/import";

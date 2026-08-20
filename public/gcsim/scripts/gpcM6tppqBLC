@@ -7,19 +7,19 @@ chasca add set="obsidiancodex" count=4;
 chasca add stats hp=4780 atk=311 atk%=0.466 atk%=0.466 cd=0.622;
 chasca add stats def%=0.124 def=39.36 hp=507.88 hp%=0.0992 atk=33.08 atk%=0.2976 er=0.1102 em=39.64 cr=0.331 cd=0.662;
 
-xilonen char lvl=90/90 cons=6 talent=10,10,10; 
+xilonen char lvl=90/90 cons=6 talent=10,10,10;
 xilonen add weapon="peakpatrolsong" refine=5 lvl=90/90;
 xilonen add set="scroll" count=4;
 xilonen add stats hp=4780 atk=311 def%=0.583 def%=0.583 def%=0.583;
 xilonen add stats def%=0.372 def=39.36 hp=507.88 hp%=0.0992 atk=33.08 atk%=0.0992 er=0.1102 em=39.64 cr=0.3972 cd=0.5296;
 
-furina char lvl=90/90 cons=6 talent=10,10,10; 
+furina char lvl=90/90 cons=6 talent=10,10,10;
 furina add weapon="favsword" refine=5 lvl=90/90;
 furina add set="totm" count=4;
 furina add stats hp=4780 atk=311 er=0.518 hp%=0.466 cd=0.622;
 furina add stats def%=0.124 def=39.36 hp=507.88 hp%=0.1984 atk=33.08 atk%=0.0992 er=0.1102 em=39.64 cr=0.3972 cd=0.662;
 
-bennett char lvl=90/90 cons=6 talent=10,10,10; 
+bennett char lvl=90/90 cons=6 talent=10,10,10;
 bennett add weapon="skywardblade" refine=5 lvl=90/90;
 bennett add set="no" count=4;
 bennett add stats hp=4780 atk=311 er=0.518 pyro%=0.466 cr=0.311;
@@ -43,19 +43,22 @@ for let i=0; i<4; i=i+1 {
   chasca skill;
   chasca aim[bullets=2];  print("this aim is: ", 1);  # Triggers C6
   chasca aim;             print("this aim is: ", 2);  # C6 instant shot + C6 Crit buff
-  chasca aim[bullets=6];  print("this aim is: ", 3);  # Normal
-  chasca aim[bullets=5];  print("this aim is: ", 4);  # Normal
-  chasca aim[bullets=2];  print("this aim is: ", 5);  # Triggers C6
+  chasca aim[bullets=4];  print("this aim is: ", 3);  # Normal
+  chasca aim[bullets=3];  print("this aim is: ", 4);  # Normal
+  chasca aim[bullets=3];  print("this aim is: ", 5);  # Triggers C6
   chasca aim;             print("this aim is: ", 6);  # C6 instant shot + C6 Crit buff
-  chasca aim[bullets=6];  print("this aim is: ", 7);  # Normal
-  chasca aim[bullets=5];  print("this aim is: ", 8);  # Normal
-  chasca aim[bullets=2];  print("this aim is: ", 9);  # Triggers C6
+  chasca aim[bullets=4];  print("this aim is: ", 7);  # Normal
+  chasca aim[bullets=3];  print("this aim is: ", 8);  # Normal
+  chasca aim[bullets=3];  print("this aim is: ", 9);  # Triggers C6
   chasca aim;             print("this aim is: ", 10); # C6 instant shot + C6 Crit buff
   if is_even(i) {
     chasca burst;
+  } else {
+    chasca aim[bullets=4];  print("this aim is: ", 11); # Normal
   }
 
 
 }
-wait(23); # for the last rot C6 instant shot to hit
+//wait(23); # for the last rot C6 instant shot to hit
+wait(66); # for the last rot 4bullet shot to hit
 //wait(59); # for the last rot Burst to hit
